@@ -5,6 +5,7 @@ import 'package:recetas_app/widgets/receta_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -12,6 +13,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final RecipeService _recipeService = RecipeService();
   late Future<List<Receta>> _futureRecetas;
+
   @override
   void initState() {
     super.initState();
@@ -23,8 +25,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('RecetasApp'),
-        backgroundColor: const Color.fromARGB(255, 80, 23, 3),
-      ), // AppBar
+        backgroundColor: const Color.fromARGB(255, 242, 231, 135),
+      ),
       body: FutureBuilder<List<Receta>>(
         future: _futureRecetas,
         builder: (context, snapshot) {
@@ -34,6 +36,10 @@ class _HomeScreenState extends State<HomeScreen> {
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('No hay recetas disponibles'));
+          }
+
           final recetas = snapshot.data!;
           return ListView.builder(
             padding: const EdgeInsets.symmetric(vertical: 8),
@@ -41,9 +47,9 @@ class _HomeScreenState extends State<HomeScreen> {
             itemBuilder: (context, index) {
               return RecetaCard(receta: recetas[index]);
             },
-          ); // ListView.builder
+          );
         },
-      ), // FutureBuilder
-    ); // Scaffold
+      ),
+    );
   }
 }

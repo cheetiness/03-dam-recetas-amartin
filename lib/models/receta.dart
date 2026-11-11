@@ -81,6 +81,6 @@ class Receta {
       calificacion: (json['rating'] as num).toDouble(),
     );
   }
-
+  
   int get tiempoTotal => tiempoPreparacion+tiempoCoccion;
 }
