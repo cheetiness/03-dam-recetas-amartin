@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:recetas_app/data/resenas_db.dart';
 import 'package:recetas_app/models/receta.dart';
+import 'package:recetas_app/models/resena.dart';
+import 'package:recetas_app/screens/formulario_resena_screen.dart';
+import 'package:recetas_app/widgets/estrellas.dart';
 
 class DetalleRecetaScreen extends StatefulWidget {
   final Receta receta;
@@ -11,6 +15,51 @@ class DetalleRecetaScreen extends StatefulWidget {
 }
 
 class _DetalleRecetaScreenState extends State<DetalleRecetaScreen> {
+  List<Resena> _resenas = [];
+  double _promedio = 0;
+  int _total = 0;
+  bool _cargandoResenas = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarResenas();
+  }
+
+  Future<void> _cargarResenas() async {
+    try {
+      final id = widget.receta.id;
+      final resenas = await ResenasDb.instancia.obtenerPorReceta(id);
+      final resumen = await ResenasDb.instancia.obtenerResumen(id);
+      if (!mounted) return;
+      setState(() {
+        _resenas = resenas;
+        _promedio = resumen.promedio;
+        _total = resumen.total;
+        _cargandoResenas = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _cargandoResenas = false);
+    }
+  }
+
+  Future<void> _escribirResena() async {
+    final guardada = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FormularioResenaScreen(receta: widget.receta),
+      ),
+    );
+    if (guardada == true) _cargarResenas(); 
+  }
+
+  String _formatearFecha(DateTime f) {
+    final dia = f.day.toString().padLeft(2, '0');
+    final mes = f.month.toString().padLeft(2, '0');
+    return '$dia/$mes/${f.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final receta = widget.receta;
@@ -83,6 +132,64 @@ class _DetalleRecetaScreenState extends State<DetalleRecetaScreen> {
               ),
             ),
           ),
+          const SizedBox(height: 24),
+          const Text(
+            "Reseñas: ",
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Estrellas(valor: _promedio),
+              const SizedBox(width: 8),
+              Text(
+                _total == 0
+                    ? 'Aún no hay reseñas'
+                    : '${_promedio.toStringAsFixed(1)} ($_total ${_total == 1 ? 'reseña' : 'reseñas'})',
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: _escribirResena,
+            icon: const Icon(Icons.rate_review),
+            label: const Text('Escribir reseña'),
+          ),
+          const SizedBox(height: 12),
+          if (_cargandoResenas)
+            const Center(child: CircularProgressIndicator())
+          else
+            ..._resenas.map(
+              (resena) => Card(
+                margin: const EdgeInsets.symmetric(vertical: 6),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Estrellas(
+                            valor: resena.calificacion.toDouble(),
+                            tamano: 18,
+                          ),
+                          Text(
+                            _formatearFecha(resena.fecha),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(resena.comentario),
+                    ],
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );

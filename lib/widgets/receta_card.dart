@@ -56,7 +56,6 @@ class RecetaCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    // Usamos propiedades que sí existen en tu clase Receta: tiempoTotal, porciones y calorias
                     Text(
                       'Tiempo: ${receta.tiempoTotal} min • ${receta.porciones} porciones • ${receta.calorias} kcal',
                       style: TextStyle(
